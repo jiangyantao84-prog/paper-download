@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>📚 文献免费下载导航</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --orange: #ea580c;
+    --orange-light: #ffedd5;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --teal: #0d9488;
+    --teal-light: #ccfbf1;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --subtext: #64748b;
+    --border: #e2e8f0;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 30px;
+  }
+  .hero {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
+    color: white;
+    padding: 28px 20px 22px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .hero p { font-size: 13px; opacity: 0.88; line-height: 1.6; }
+  .hero .tag {
+    display: inline-block; background: rgba(255,255,255,0.2);
+    border-radius: 20px; padding: 2px 10px; font-size: 12px; margin: 8px 4px 0;
+  }
+
+  /* 搜索框 */
+  .search-wrap {
+    padding: 14px 16px 0;
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg);
+  }
+  .search-box {
+    display: flex; align-items: center;
+    background: white; border-radius: 50px;
+    border: 1.5px solid var(--border);
+    padding: 0 16px; height: 44px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .search-box input {
+    border: none; outline: none; flex: 1;
+    font-size: 15px; background: transparent; color: var(--text);
+  }
+  .search-box .clear-btn {
+    font-size: 18px; cursor: pointer; color: var(--subtext);
+    display: none; padding: 4px;
+  }
+
+  /* 快速入口 */
+  .quick-wrap { padding: 14px 16px 0; }
+  .quick-title { font-size: 13px; color: var(--subtext); margin-bottom: 10px; font-weight: 500; }
+  .quick-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  }
+  .quick-item {
+    background: white; border-radius: 12px; padding: 12px 6px;
+    text-align: center; text-decoration: none; color: var(--text);
+    border: 1.5px solid var(--border);
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+  .quick-item:active { transform: scale(0.95); }
+  .quick-item .icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .quick-item .label { font-size: 11px; color: var(--subtext); line-height: 1.3; }
+
+  /* 分类 */
+  .section { padding: 16px 16px 0; }
+  .section-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .section-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .section-title { font-size: 16px; font-weight: 700; }
+  .section-count { font-size: 12px; color: var(--subtext); margin-left: auto; }
+
+  .card-grid { display: flex; flex-direction: column; gap: 8px; }
+  .db-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; color: var(--text);
+    transition: transform 0.12s, box-shadow 0.12s;
+    cursor: pointer;
+  }
+  .db-card:active { transform: scale(0.98); box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+  .db-card .db-logo {
+    width: 42px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0; font-weight: 700;
+  }
+  .db-card .db-info { flex: 1; min-width: 0; }
+  .db-card .db-name { font-size: 15px; font-weight: 600; }
+  .db-card .db-desc { font-size: 12px; color: var(--subtext); margin-top: 2px; line-height: 1.4; }
+  .db-card .db-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+  .db-card .tag {
+    font-size: 10px; padding: 1px 7px; border-radius: 20px;
+    font-weight: 500;
+  }
+  .db-card .arrow { color: var(--subtext); font-size: 16px; flex-shrink: 0; }
+  .tag-free { background: #dcfce7; color: #15803d; }
+  .tag-medical { background: #fee2e2; color: #dc2626; }
+  .tag-cn { background: #dbeafe; color: #1d4ed8; }
+  .tag-en { background: #ede9fe; color: #6d28d9; }
+  .tag-vip { background: #fef9c3; color: #92400e; }
+  .tag-law { background: #ffedd5; color: #c2410c; }
+  .tag-finance { background: #ccfbf1; color: #0f766e; }
+
+  /* 工具推荐 */
+  .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tool-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1.5px solid var(--border); padding: 14px;
+    text-align: center; text-decoration: none; color: var(--text); cursor: pointer;
+    transition: transform 0.12s;
+  }
+  .tool-card:active { transform: scale(0.97); }
+  .tool-card .t-icon { font-size: 26px; margin-bottom: 6px; }
+  .tool-card .t-name { font-size: 13px; font-weight: 600; }
+  .tool-card .t-desc { font-size: 11px; color: var(--subtext); margin-top: 3px; line-height: 1.4; }
+
+  /* 提示 */
+  .tip-box {
+    margin: 16px 16px 0;
+    background: #fffbeb; border: 1px solid #fde68a;
+    border-radius: var(--radius); padding: 12px 14px;
+    font-size: 12px; color: #92400e; line-height: 1.7;
+  }
+  .tip-box strong { display: block; margin-bottom: 4px; font-size: 13px; }
+
+  /* 搜索无结果 */
+  .no-result {
+    text-align: center; padding: 40px 20px;
+    color: var(--subtext); display: none;
+  }
+  .no-result .icon { font-size: 40px; margin-bottom: 10px; }
+
+  /* 隐藏 */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>📚 文献免费下载导航</h1>
+  <p>中英文数据库 · 医学 · 法律 · 金融<br>一站式文献获取资源汇总</p>
+  <div>
+    <span class="tag">🆓 免费资源</span>
+    <span class="tag">🏥 医学数据库</span>
+    <span class="tag">🌍 全球覆盖</span>
+  </div>
+</div>
+
+<!-- 搜索 -->
+<div class="search-wrap">
+  <div class="search-box">
+    <span style="font-size:18px;margin-right:8px;color:#94a3b8">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索数据库名称..." oninput="doSearch(this.value)">
+    <span class="clear-btn" id="clearBtn" onclick="clearSearch()">✕</span>
+  </div>
+</div>
+
+<!-- 快速入口 -->
+<div class="quick-wrap" id="quickSection">
+  <div class="quick-title">⚡ 常用快捷入口</div>
+  <div class="quick-grid">
+    <a class="quick-item" href="https://sci-hub.se" target="_blank">
+      <span class="icon">🔓</span><span class="label">Sci-Hub</span>
+    </a>
+    <a class="quick-item" href="https://pubmed.ncbi.nlm.nih.gov" target="_blank">
+      <span class="icon">🧬</span><span class="label">PubMed</span>
+    </a>
+    <a class="quick-item" href="https://www.cnki.net" target="_blank">
+      <span class="icon">📖</span><span class="label">知网</span>
+    </a>
+    <a class="quick-item" href="https://scholar.google.com" target="_blank">
+      <span class="icon">🎓</span><span class="label">谷歌学术</span>
+    </a>
+    <a class="quick-item" href="http://yemao.in/xueshu" target="_blank">
+      <span class="icon">🌐</span><span class="label">野猫学术</span>
+    </a>
+    <a class="quick-item" href="https://www.webofscience.com" target="_blank">
+      <span class="icon">🔬</span><span class="label">Web of Science</span>
+    </a>
+    <a class="quick-item" href="https://www.ablesci.com" target="_blank">
+      <span class="icon">🚀</span><span class="label">科研通</span>
+    </a>
+    <a class="quick-item" href="https://libgen.is" target="_blank">
+      <span class="icon">📦</span><span class="label">LibGen</span>
+    </a>
+  </div>
+</div>
+
+<!-- 分类内容 -->
+<div id="allSections">
+
+<!-- 免费下载神器 -->
+<div class="section db-section" data-section="free">
+  <div class="section-header">
+    <div class="section-icon" style="background:#dcfce7">🔓</div>
+    <div class="section-title">免费下载神器</div>
+    <div class="section-count">5个资源</div>
+  </div>
+  <div class="card-grid">
+    <a class="db-card" href="https://sci-hub.se" target="_blank">
+      <div class="db-logo" style="background:#fee2e2">🔓</div>
+      <div class="db-info">
+        <div class="db-name">Sci-Hub</div>
+        <div class="db-desc">输入DOI/PMID/URL，一键下载几乎所有英文文献PDF</div>
+        <div class="db-tags"><span class="tag tag-free">免费</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="http://yemao.in/xueshu" target="_blank">
+      <div class="db-logo" style="background:#dbeafe">🌐</div>
+      <div class="db-info">
+        <div class="db-name">野猫学术</div>
+        <div class="db-desc">整合多个数据库，中英文文献一站式免费获取</div>
+        <div class="db-tags"><span class="tag tag-free">免费</span><span class="tag tag-cn">中文</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.ablesci.com" target="_blank">
+      <div class="db-logo" style="background:#ede9fe">🚀</div>
+      <div class="db-info">
+        <div class="db-name">科研通 AbleSci</div>
+        <div class="db-desc">10秒AI极速下载，支持互助，国内可访问</div>
+        <div class="db-tags"><span class="tag tag-free">免费</span><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://libgen.is" target="_blank">
+      <div class="db-logo" style="background:#fef9c3">📦</div>
+      <div class="db-info">
+        <div class="db-name">Library Genesis (LibGen)</div>
+        <div class="db-desc">免费下载书籍和文献，资源极丰富</div>
+        <div class="db-tags"><span class="tag tag-free">免费</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://unpaywall.org" target="_blank">
+      <div class="db-logo" style="background:#dcfce7">🔑</div>
+      <div class="db-info">
+        <div class="db-name">Unpaywall</div>
+        <div class="db-desc">自动寻找论文开放获取版本，合法免费</div>
+        <div class="db-tags"><span class="tag tag-free">免费</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+  </div>
+</div>
+
+<!-- 医学数据库 -->
+<div class="section db-section" data-section="medical">
+  <div class="section-header">
+    <div class="section-icon" style="background:#fee2e2">🏥</div>
+    <div class="section-title">医学数据库</div>
+    <div class="section-count">10个资源</div>
+  </div>
+  <div class="card-grid">
+    <a class="db-card" href="https://pubmed.ncbi.nlm.nih.gov" target="_blank">
+      <div class="db-logo" style="background:#dbeafe">🧬</div>
+      <div class="db-info">
+        <div class="db-name">PubMed</div>
+        <div class="db-desc">美国国立医学图书馆，全球最权威医学文献数据库，免费检索</div>
+        <div class="db-tags"><span class="tag tag-free">免费</span><span class="tag tag-medical">医学</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.cochranelibrary.com" target="_blank">
+      <div class="db-logo" style="background:#dcfce7">📊</div>
+      <div class="db-info">
+        <div class="db-name">Cochrane Library</div>
+        <div class="db-desc">系统综述/Meta分析权威数据库，循证医学必备</div>
+        <div class="db-tags"><span class="tag tag-medical">医学</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.embase.com" target="_blank">
+      <div class="db-logo" style="background:#fee2e2">🔬</div>
+      <div class="db-info">
+        <div class="db-name">Embase 生物医学</div>
+        <div class="db-desc">Elsevier旗下，生物医学文献数据库，覆盖广</div>
+        <div class="db-tags"><span class="tag tag-medical">医学</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.uptodate.com" target="_blank">
+      <div class="db-logo" style="background:#ede9fe">💊</div>
+      <div class="db-info">
+        <div class="db-name">UpToDate 临床顾问</div>
+        <div class="db-desc">临床决策支持工具，诊疗指南权威参考</div>
+        <div class="db-tags"><span class="tag tag-medical">医学</span><span class="tag tag-vip">需授权</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.clinicalkey.com" target="_blank">
+      <div class="db-logo" style="background:#ffedd5">🗝️</div>
+      <div class="db-info">
+        <div class="db-name">ClinicalKey 临床精钥</div>
+        <div class="db-desc">Elsevier临床数据库，教材、期刊、药品综合平台</div>
+        <div class="db-tags"><span class="tag tag-medical">医学</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.scopus.com" target="_blank">
+      <div class="db-logo" style="background:#ccfbf1">📑</div>
+      <div class="db-info">
+        <div class="db-name">Scopus</div>
+        <div class="db-desc">最大同行评审文献摘要数据库，含引用分析</div>
+        <div class="db-tags"><span class="tag tag-en">英文</span><span class="tag tag-medical">医学</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.nejm.org" target="_blank">
+      <div class="db-logo" style="background:#fee2e2">❤️</div>
+      <div class="db-info">
+        <div class="db-name">NEJM 新英格兰医学杂志</div>
+        <div class="db-desc">全球顶级医学期刊，部分文章免费获取</div>
+        <div class="db-tags"><span class="tag tag-medical">医学</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.sinomed.ac.cn" target="_blank">
+      <div class="db-logo" style="background:#dbeafe">🏨</div>
+      <div class="db-info">
+        <div class="db-name">SinoMed 中国生物医学</div>
+        <div class="db-desc">中国生物医学文献服务系统，国内医学文献必备</div>
+        <div class="db-tags"><span class="tag tag-medical">医学</span><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://med.wanfangdata.com.cn" target="_blank">
+      <div class="db-logo" style="background:#dcfce7">💉</div>
+      <div class="db-info">
+        <div class="db-name">万方医学网</div>
+        <div class="db-desc">国内医学文献、期刊、会议论文综合平台</div>
+        <div class="db-tags"><span class="tag tag-medical">医学</span><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.bmj.com" target="_blank">
+      <div class="db-logo" style="background:#fef9c3">🇬🇧</div>
+      <div class="db-info">
+        <div class="db-name">BMJ 英国医学杂志</div>
+        <div class="db-desc">英国医学学会旗舰期刊，部分开放获取</div>
+        <div class="db-tags"><span class="tag tag-medical">医学</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+  </div>
+</div>
+
+<!-- 中文综合数据库 -->
+<div class="section db-section" data-section="cn">
+  <div class="section-header">
+    <div class="section-icon" style="background:#dbeafe">📖</div>
+    <div class="section-title">中文综合数据库</div>
+    <div class="section-count">6个资源</div>
+  </div>
+  <div class="card-grid">
+    <a class="db-card" href="https://www.cnki.net" target="_blank">
+      <div class="db-logo" style="background:#dbeafe">📚</div>
+      <div class="db-info">
+        <div class="db-name">中国知网 CNKI</div>
+        <div class="db-desc">国内最大学术期刊数据库，硕博论文、期刊全收录</div>
+        <div class="db-tags"><span class="tag tag-cn">中文</span><span class="tag tag-vip">需授权</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.wanfangdata.com.cn" target="_blank">
+      <div class="db-logo" style="background:#dcfce7">🌿</div>
+      <div class="db-info">
+        <div class="db-name">万方数据</div>
+        <div class="db-desc">期刊、学位论文、会议论文，国内第二大学术库</div>
+        <div class="db-tags"><span class="tag tag-cn">中文</span><span class="tag tag-vip">需授权</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.cqvip.com" target="_blank">
+      <div class="db-logo" style="background:#ede9fe">📝</div>
+      <div class="db-info">
+        <div class="db-name">维普期刊</div>
+        <div class="db-desc">中文科技期刊数据库，期刊收录全面</div>
+        <div class="db-tags"><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://book.chaoxing.com" target="_blank">
+      <div class="db-logo" style="background:#ffedd5">⭐</div>
+      <div class="db-info">
+        <div class="db-name">超星读秀/学习通</div>
+        <div class="db-desc">电子书、学术论文综合平台，读秀知识库</div>
+        <div class="db-tags"><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.duxiu.com" target="_blank">
+      <div class="db-logo" style="background:#fee2e2">📕</div>
+      <div class="db-info">
+        <div class="db-name">读秀学术搜索</div>
+        <div class="db-desc">中文书籍全文检索，可申请文章传递</div>
+        <div class="db-tags"><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.ryjiaoyu.com" target="_blank">
+      <div class="db-logo" style="background:#ccfbf1">🎓</div>
+      <div class="db-info">
+        <div class="db-name">人大复印报刊资料</div>
+        <div class="db-desc">人文社科领域专业文献，高校图书馆常用</div>
+        <div class="db-tags"><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+  </div>
+</div>
+
+<!-- 英文综合数据库 -->
+<div class="section db-section" data-section="en">
+  <div class="section-header">
+    <div class="section-icon" style="background:#ede9fe">🌍</div>
+    <div class="section-title">英文综合数据库</div>
+    <div class="section-count">8个资源</div>
+  </div>
+  <div class="card-grid">
+    <a class="db-card" href="https://scholar.google.com" target="_blank">
+      <div class="db-logo" style="background:#fef9c3">🎓</div>
+      <div class="db-info">
+        <div class="db-name">Google Scholar 谷歌学术</div>
+        <div class="db-desc">全球最大学术搜索引擎，引用关系分析一流</div>
+        <div class="db-tags"><span class="tag tag-free">免费</span><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.webofscience.com" target="_blank">
+      <div class="db-logo" style="background:#dbeafe">🔭</div>
+      <div class="db-info">
+        <div class="db-name">Web of Science</div>
+        <div class="db-desc">全球权威引文数据库，SCI/SSCI/AHCI检索核心</div>
+        <div class="db-tags"><span class="tag tag-en">英文</span><span class="tag tag-vip">需授权</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.sciencedirect.com" target="_blank">
+      <div class="db-logo" style="background:#ffedd5">🔶</div>
+      <div class="db-info">
+        <div class="db-name">ScienceDirect</div>
+        <div class="db-desc">Elsevier旗下，自然科学与工程领域顶级数据库</div>
+        <div class="db-tags"><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.nature.com" target="_blank">
+      <div class="db-logo" style="background:#dcfce7">🌿</div>
+      <div class="db-info">
+        <div class="db-name">Nature</div>
+        <div class="db-desc">顶级科学期刊，部分文章开放获取</div>
+        <div class="db-tags"><span class="tag tag-en">英文</span><span class="tag tag-free">部分免费</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://ieeexplore.ieee.org" target="_blank">
+      <div class="db-logo" style="background:#dbeafe">⚡</div>
+      <div class="db-info">
+        <div class="db-name">IEEE Xplore</div>
+        <div class="db-desc">电气电子工程、计算机科学领域权威数据库</div>
+        <div class="db-tags"><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://onlinelibrary.wiley.com" target="_blank">
+      <div class="db-logo" style="background:#ede9fe">📗</div>
+      <div class="db-info">
+        <div class="db-name">Wiley Online Library</div>
+        <div class="db-desc">涵盖科学、技术、医学等多学科，期刊书籍丰富</div>
+        <div class="db-tags"><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://link.springer.com" target="_blank">
+      <div class="db-logo" style="background:#fee2e2">🌸</div>
+      <div class="db-info">
+        <div class="db-name">SpringerLink</div>
+        <div class="db-desc">Springer出版社，STM领域期刊书籍大全</div>
+        <div class="db-tags"><span class="tag tag-en">英文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.jstor.org" target="_blank">
+      <div class="db-logo" style="background:#ccfbf1">🏛️</div>
+      <div class="db-info">
+        <div class="db-name">JSTOR</div>
+        <div class="db-desc">人文社科学术期刊存档数据库，历史文献丰富</div>
+        <div class="db-tags"><span class="tag tag-en">英文</span><span class="tag tag-free">部分免费</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+  </div>
+</div>
+
+<!-- 法律/金融数据库 -->
+<div class="section db-section" data-section="law-finance">
+  <div class="section-header">
+    <div class="section-icon" style="background:#ffedd5">⚖️</div>
+    <div class="section-title">法律 · 金融数据库</div>
+    <div class="section-count">4个资源</div>
+  </div>
+  <div class="card-grid">
+    <a class="db-card" href="https://www.lawbank.com.tw" target="_blank">
+      <div class="db-logo" style="background:#ffedd5">⚖️</div>
+      <div class="db-info">
+        <div class="db-name">北大法宝</div>
+        <div class="db-desc">国内最权威法律数据库，法规、判例、法学期刊</div>
+        <div class="db-tags"><span class="tag tag-law">法律</span><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.iolaw.org.cn" target="_blank">
+      <div class="db-logo" style="background:#fef9c3">📜</div>
+      <div class="db-info">
+        <div class="db-name">北大法意</div>
+        <div class="db-desc">法学学术数据库，法学期刊全文检索</div>
+        <div class="db-tags"><span class="tag tag-law">法律</span><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.resset.com" target="_blank">
+      <div class="db-logo" style="background:#ccfbf1">💹</div>
+      <div class="db-info">
+        <div class="db-name">锐思金融数据库</div>
+        <div class="db-desc">金融数据研究平台，A股上市公司财务数据</div>
+        <div class="db-tags"><span class="tag tag-finance">金融</span><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="db-card" href="https://www.epsdataset.com" target="_blank">
+      <div class="db-logo" style="background:#dbeafe">📈</div>
+      <div class="db-info">
+        <div class="db-name">EPS 数据平台</div>
+        <div class="db-desc">宏观经济、金融、统计数据，科研常用</div>
+        <div class="db-tags"><span class="tag tag-finance">金融</span><span class="tag tag-cn">中文</span></div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+  </div>
+</div>
+
+<!-- 实用工具 -->
+<div class="section" id="toolSection">
+  <div class="section-header">
+    <div class="section-icon" style="background:#dbeafe">🛠️</div>
+    <div class="section-title">实用辅助工具</div>
+  </div>
+  <div class="tool-grid">
+    <a class="tool-card" href="https://www.doi.org" target="_blank">
+      <div class="t-icon">🔗</div>
+      <div class="t-name">DOI 解析</div>
+      <div class="t-desc">通过DOI直接跳转论文</div>
+    </a>
+    <a class="tool-card" href="https://www.researchgate.net" target="_blank">
+      <div class="t-icon">👥</div>
+      <div class="t-name">ResearchGate</div>
+      <div class="t-desc">向作者直接索取全文</div>
+    </a>
+    <a class="tool-card" href="https://semantic scholar.org" target="_blank">
+      <div class="t-icon">🤖</div>
+      <div class="t-name">Semantic Scholar</div>
+      <div class="t-desc">AI驱动学术搜索引擎</div>
+    </a>
+    <a class="tool-card" href="https://www.mendeley.com" target="_blank">
+      <div class="t-icon">📋</div>
+      <div class="t-name">Mendeley</div>
+      <div class="t-desc">文献管理+PDF阅读</div>
+    </a>
+  </div>
+</div>
+
+</div><!-- /allSections -->
+
+<!-- 无结果提示 -->
+<div class="no-result" id="noResult">
+  <div class="icon">🔍</div>
+  <p>没找到「<span id="noResultKeyword"></span>」相关的数据库</p>
+  <p style="font-size:12px;margin-top:8px;color:#94a3b8">换个关键词试试，或直接去<br><a href="http://yemao.in/xueshu" target="_blank" style="color:#2563eb">野猫学术</a>搜索</p>
+</div>
+
+<!-- 提示 -->
+<div class="tip-box" id="tipBox">
+  <strong>💡 使用小贴士</strong>
+  遇到付费墙？复制论文DOI → 打开 Sci-Hub → 粘贴下载。<br>
+  中文文献下载失败？试试科研通（AbleSci），有互助社区。<br>
+  需要书籍？LibGen 几乎可以找到所有外文教材。
+</div>
+
+<script>
+function doSearch(val) {
+  const kw = val.trim().toLowerCase();
+  const clearBtn = document.getElementById('clearBtn');
+  clearBtn.style.display = kw ? 'block' : 'none';
+
+  const cards = document.querySelectorAll('.db-card');
+  const sections = document.querySelectorAll('.db-section');
+  const quick = document.getElementById('quickSection');
+  const toolSection = document.getElementById('toolSection');
+  const tipBox = document.getElementById('tipBox');
+  const noResult = document.getElementById('noResult');
+
+  if (!kw) {
+    cards.forEach(c => c.classList.remove('hidden'));
+    sections.forEach(s => s.classList.remove('hidden'));
+    quick.classList.remove('hidden');
+    toolSection.classList.remove('hidden');
+    tipBox.classList.remove('hidden');
+    noResult.style.display = 'none';
+    return;
+  }
+
+  quick.classList.add('hidden');
+  toolSection.classList.add('hidden');
+  tipBox.classList.add('hidden');
+
+  let anyVisible = false;
+  sections.forEach(s => {
+    const cardsInSection = s.querySelectorAll('.db-card');
+    let sectionHasMatch = false;
+    cardsInSection.forEach(c => {
+      const text = c.innerText.toLowerCase();
+      if (text.includes(kw)) {
+        c.classList.remove('hidden');
+        sectionHasMatch = true;
+        anyVisible = true;
+      } else {
+        c.classList.add('hidden');
+      }
+    });
+    s.classList.toggle('hidden', !sectionHasMatch);
+  });
+
+  if (!anyVisible) {
+    noResult.style.display = 'block';
+    document.getElementById('noResultKeyword').textContent = val;
+  } else {
+    noResult.style.display = 'none';
+  }
+}
+
+function clearSearch() {
+  const input = document.getElementById('searchInput');
+  input.value = '';
+  doSearch('');
+  input.focus();
+}
+</script>
+</body>
+</html>
